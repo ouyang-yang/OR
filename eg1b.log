@@ -2278,3 +2278,86 @@ H    0     0                    495793.00000 488752.717  1.42%     -    0s
      0     0 489881.649    0   63 495793.000 489881.649  1.19%     -    0s
      0     0 489881.649    0   63 495793.000 489881.649  1.19%     -    0s
      0     2 489881.649    0   63 495793.000 489881.649  1.19%     -    0s
+H 3236  1589                    494916.00000 491427.381  0.70%   9.7    2s
+H 3295  1537                    494139.00000 491502.148  0.53%   9.7    2s
+H 3415  1344                    493665.00000 491502.148  0.44%   9.7    2s
+H 3856  1366                    493401.00000 491604.732  0.36%  10.0    2s
+H 7136  2058                    493168.00000 492068.146  0.22%  11.8    3s
+ 13509     0 493075.187   32   59 493168.000 492981.975  0.04%  13.9    5s
+
+Cutting planes:
+  Lift-and-project: 1
+  Cover: 79
+  Clique: 3
+  MIR: 45
+  StrongCG: 31
+  Flow cover: 10
+  Inf proof: 12
+  Zero half: 1
+  RLT: 3
+
+Explored 13932 nodes (192098 simplex iterations) in 5.05 seconds (2.26 work units)
+Thread count was 8 (of 8 available processors)
+
+Solution count 10: 493168 493401 493665 ... 945624
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 4.931680000000e+05, best bound 4.931680000000e+05, gap 0.0000%
+
+Gurobi 10.0.1 (win64) logging started Thu Mar 16 22:01:38 2023
+
+Set parameter LogFile to value "eg1b.log"
+Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (win64)
+
+CPU model: Intel(R) Core(TM) i5-1035G1 CPU @ 1.00GHz, instruction set [SSE2|AVX|AVX2|AVX512]
+Thread count: 4 physical cores, 8 logical processors, using up to 8 threads
+
+Optimize a model with 4130 rows, 4020 columns and 7030 nonzeros
+Model fingerprint: 0x0fda1383
+Model has 2010 quadratic objective terms
+Model has 100 quadratic constraints
+Variable types: 0 continuous, 4020 integer (1010 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+03]
+  QMatrix range    [1e+00, 1e+00]
+  Objective range  [2e+03, 8e+03]
+  QObjective range [2e+00, 3e+01]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 9e+01]
+  QRHS range       [1e+02, 2e+02]
+Presolve removed 4010 rows and 2000 columns
+Presolve time: 0.01s
+Presolved: 3230 rows, 3030 columns, 10060 nonzeros
+Variable types: 0 continuous, 3030 integer (1010 binary)
+Found heuristic solution: objective 945624.00000
+
+Root relaxation: objective 4.863800e+05, 136 iterations, 0.00 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 486380.033    0   17 945624.000 486380.033  48.6%     -    0s
+H    0     0                    497203.00000 486380.033  2.18%     -    0s
+     0     0 487556.625    0   32 497203.000 487556.625  1.94%     -    0s
+     0     0 487556.625    0   15 497203.000 487556.625  1.94%     -    0s
+H    0     0                    497138.00000 487556.625  1.93%     -    0s
+     0     0 488327.957    0   25 497138.000 488327.957  1.77%     -    0s
+H    0     0                    496176.00000 488327.957  1.58%     -    0s
+     0     0 488733.886    0   35 496176.000 488733.886  1.50%     -    0s
+     0     0 488752.717    0   36 496176.000 488752.717  1.50%     -    0s
+H    0     0                    495793.00000 488752.717  1.42%     -    0s
+     0     0 489198.016    0   39 495793.000 489198.016  1.33%     -    0s
+     0     0 489201.463    0   39 495793.000 489201.463  1.33%     -    0s
+     0     0 489201.463    0   14 495793.000 489201.463  1.33%     -    0s
+     0     0 489201.463    0   29 495793.000 489201.463  1.33%     -    0s
+     0     0 489201.463    0   37 495793.000 489201.463  1.33%     -    0s
+     0     0 489201.463    0   40 495793.000 489201.463  1.33%     -    0s
+     0     0 489311.142    0   39 495793.000 489311.142  1.31%     -    0s
+     0     0 489326.880    0   40 495793.000 489326.880  1.30%     -    0s
+     0     0 489633.030    0   53 495793.000 489633.030  1.24%     -    0s
+     0     0 489646.959    0   53 495793.000 489646.959  1.24%     -    0s
+     0     0 489733.016    0   44 495793.000 489733.016  1.22%     -    0s
+     0     0 489741.048    0   57 495793.000 489741.048  1.22%     -    0s
+     0     0 489881.649    0   63 495793.000 489881.649  1.19%     -    0s
+     0     0 489881.649    0   63 495793.000 489881.649  1.19%     -    0s
+     0     2 489881.649    0   63 495793.000 489881.649  1.19%     -    0s
