@@ -69,7 +69,7 @@ def ReadInstance(filepath):
 if __name__=='__main__':
     
     ##### Get instance #####
-    filepath = 'data/instance05.txt'
+    filepath = 'data/instance01.txt'
     Instance = ReadInstance(filepath)
     
     
