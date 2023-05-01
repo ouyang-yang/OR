@@ -1,6 +1,6 @@
-import numpy as np
 from datetime import *
 from gurobipy import *
+import numpy as np
 
 # Store all parameters of an instance into a dict
 def ReadInstance(filepath):
@@ -69,7 +69,7 @@ def ReadInstance(filepath):
 if __name__=='__main__':
     
     ##### Get instance #####
-    filepath = 'data/instance04.txt'
+    filepath = 'data/instance05.txt'
     Instance = ReadInstance(filepath)
     
     
@@ -183,12 +183,12 @@ if __name__=='__main__':
     
     
     ##### Constraints #####
-    P1.addConstrs((quicksum(x[i][j][k] for i in range(n_C) for j in list(range(0, k))+list(range(k+1, n_K+1))) == 1 for k in range(1, n_K+1)), '(1)')
-    P1.addConstrs((quicksum(x[i][j][k] for i in range(n_C) for k in list(range(0, j))+list(range(j+1, n_K+1))) == 1 for j in range(1, n_K+1)), '(2)')
-    P1.addConstrs((quicksum(x[i][j][k] for k in list(range(0, j))+list(range(j+1, n_K+1))) == quicksum(x[i][h][j] for h in list(range(0, j))+list(range(j+1, n_K+1))) for j in range(1, n_K+1) for i in range(n_C)), '(3)')
+    P1.addConstrs((quicksum(x[i][j][k] for i in range(n_C) for j in range(n_K+1)) == 1 for k in range(n_K)), '(1)')
+    P1.addConstrs((quicksum(x[i][j][k] for i in range(n_C) for k in range(n_K+1)) == 1 for j in range(n_K)), '(2)')
+    P1.addConstrs((quicksum(x[i][j][k] for k in range(n_K+1)) == quicksum(x[i][h][j] for h in range(n_K+1)) for j in range(n_K) for i in range(n_C)), '(3)')
     
-    P1.addConstrs((2*x[i][j][k] <= accept[j] + accept[k] for j in list(range(0, k))+list(range(k+1, n_K+1)) for k in list(range(0, j))+list(range(j+1, n_K+1)) for i in range(n_C)), '(4)')
-    P1.addConstrs((quicksum(x[i][0][k] for k in range(1, n_K+1)) <= 1 for i in range(n_C)), '(10)')
+    P1.addConstrs((2*x[i][j][k] <= accept[j] + accept[k] for j in range(n_K+1) for k in range(n_K+1) if (j!=k) for i in range(n_C)), '(4)')
+    P1.addConstrs((quicksum(x[i][0][k] for k in range(n_K)) <= 1 for i in range(n_C)), '(10)')
 
     # P1.addConstrs(((order_begin_time[k]-0.5-order_end_time[j]-3.0)+n_D*24.0*(1-x[i][j][k]) >= s[i][j][k] for j in list(range(0, k))+list(range(k+1, n_K+1)) for k in list(range(0, j))+list(range(j+1, n_K+1)) for i in range(n_C)), '(5)')
     # P1.addConstrs((station_distance[order_final_station[j]][order_initial_station[k]]*x[i][j][k] <= s[i][j][k] for j in list(range(0, k))+list(range(k+1, n_K+1)) for k in list(range(0, j))+list(range(j+1, n_K+1)) for i in range(n_C)), '(6)')
@@ -202,10 +202,5 @@ if __name__=='__main__':
     
     ##### Optimization #####
     P1.optimize()
-    
+    print("z* = ", P1.ObjVal)
 
-    for i in range(n_C):
-        for j in range(n_K+1):
-            for k in range(n_K+1):
-                print(x[i][j][k].x, end=' ')
-            print('\n')

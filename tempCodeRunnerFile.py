@@ -1,5 +1,4 @@
-    for i in range(n_C):
-        for j in range(n_K+1):
-            for k in range(n_K+1):
-                print(x[i][j][k].x, end=' ')
-            print('\n')
+    # P1.addConstrs(((order_begin_time[k]-0.5-order_end_time[j]-3.0)+n_D*24.0*(1-x[i][j][k]) >= s[i][j][k] for j in list(range(0, k))+list(range(k+1, n_K+1)) for k in list(range(0, j))+list(range(j+1, n_K+1)) for i in range(n_C)), '(5)')
+    # P1.addConstrs((station_distance[order_final_station[j]][order_initial_station[k]]*x[i][j][k] <= s[i][j][k] for j in list(range(0, k))+list(range(k+1, n_K+1)) for k in list(range(0, j))+list(range(j+1, n_K+1)) for i in range(n_C)), '(6)')
+    # P1.addConstr((quicksum(s[i][j][k] for j in list(range(0, k))+list(range(k+1, n_K+1)) for k in list(range(0, j))+list(range(j+1, n_K+1)) for i in range(n_C)) <= B), '(11)')
+  
