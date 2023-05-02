@@ -1,6 +1,6 @@
+import numpy as np
 from datetime import *
 from gurobipy import *
-import numpy as np
 
 # Store all parameters of an instance into a dict
 def ReadInstance(filepath):
@@ -69,7 +69,7 @@ def ReadInstance(filepath):
 if __name__=='__main__':
     
     ##### Get instance #####
-    filepath = 'data/instance01.txt'
+    filepath = 'data/instance05.txt'
     Instance = ReadInstance(filepath)
     
     
@@ -90,10 +90,10 @@ if __name__=='__main__':
     
     # Car info
     car_level = []
-    car_current_station = []
+    car_initial_station = []
     for i in range(n_C):
         car_level.append(Instance['Car_Info'][i][1])
-        car_current_station.append(Instance['Car_Info'][i][2])
+        car_initial_station.append(Instance['Car_Info'][i][2])
         
     # Level rate
     level_rate = []
@@ -148,7 +148,7 @@ if __name__=='__main__':
     accept = []
     for i in range(n_K+1):
         if (i == 0):
-            accept.append(int(1))
+            accept.append(P1.addVar(lb=1, vtype=GRB.BINARY, name='accept_'+str(i+1)))
             continue
         accept.append(P1.addVar(lb=0, vtype=GRB.BINARY, name='accept_'+str(i+1)))
         
@@ -166,7 +166,7 @@ if __name__=='__main__':
     for i in range(n_K+1):
         u.append(P1.addVar(lb=0, vtype=GRB.BINARY, name='u_'+str(i+1)))
                 
-    # s_ijk: continuous, setup time for car i to process order k after finish order j
+    # s_ijk: continuous, moving time for car i to process order k after finish order j
     s = []
     for i in range(n_C):
         s.append([])
@@ -183,24 +183,32 @@ if __name__=='__main__':
     
     
     ##### Constraints #####
-    P1.addConstrs((quicksum(x[i][j][k] for i in range(n_C) for j in range(n_K+1)) == 1 for k in range(n_K)), '(1)')
-    P1.addConstrs((quicksum(x[i][j][k] for i in range(n_C) for k in range(n_K+1)) == 1 for j in range(n_K)), '(2)')
-    P1.addConstrs((quicksum(x[i][j][k] for k in range(n_K+1)) == quicksum(x[i][h][j] for h in range(n_K+1)) for j in range(n_K) for i in range(n_C)), '(3)')
+    # x_ijk = 1 implies order j and k are both accepted
+    P1.addConstrs((2*x[i][j][k] <= accept[j] + accept[k] for j in range(n_K+1) for k in range(1, n_K+1) if (j!=k) for i in range(n_C)))
     
-    P1.addConstrs((2*x[i][j][k] <= accept[j] + accept[k] for j in range(n_K+1) for k in range(n_K+1) if (j!=k) for i in range(n_C)), '(4)')
-    P1.addConstrs((quicksum(x[i][0][k] for k in range(n_K)) <= 1 for i in range(n_C)), '(10)')
-
-    # P1.addConstrs(((order_begin_time[k]-0.5-order_end_time[j]-3.0)+n_D*24.0*(1-x[i][j][k]) >= s[i][j][k] for j in list(range(0, k))+list(range(k+1, n_K+1)) for k in list(range(0, j))+list(range(j+1, n_K+1)) for i in range(n_C)), '(5)')
-    # P1.addConstrs((station_distance[order_final_station[j]][order_initial_station[k]]*x[i][j][k] <= s[i][j][k] for j in list(range(0, k))+list(range(k+1, n_K+1)) for k in list(range(0, j))+list(range(j+1, n_K+1)) for i in range(n_C)), '(6)')
-    # P1.addConstr((quicksum(s[i][j][k] for j in list(range(0, k))+list(range(k+1, n_K+1)) for k in list(range(0, j))+list(range(j+1, n_K+1)) for i in range(n_C)) <= B), '(11)')
+    # an order can only be processed by one car
+    P1.addConstrs((quicksum(quicksum(x[i][j][k] for i in range(n_C)) for j in range(n_K+1) if (j!=k)) == 1 for k in range(1, n_K+1)))
+    P1.addConstrs((quicksum(quicksum(x[i][j][k] for i in range(n_C)) for k in range(n_K+1) if (k!=j)) == 1 for j in range(1, n_K+1)))
+    P1.addConstrs((quicksum(x[i][j][k] for k in range(n_K+1) if (k!=j)) == quicksum(x[i][h][j] for h in range(n_K+1) if (h!=j)) for j in range(1, n_K+1) for i in range(n_C)))
     
-    # P1.addConstrs((x[i][j][k]*car_level[i] == accept[j] * order_level[j] + u[j] for i in range(n_C) for j in range(n_K+1)), '(7)')
-    # P1.addConstrs((x[i][j][k]*car_level[i] == accept[k] * order_level[k] + u[k] for i in range(n_C) for k in range(n_K+1)), '(8)')
-
+    # car i process its first order
+    P1.addConstrs((quicksum(x[i][0][j] for j in range(1, n_K+1)) <= 1 for i in range(n_C)))
     
+    # (upgrade) level of car i must match to level required of order k or +1
+    P1.addConstrs((x[i][j][k]*car_level[i] <= u[j] + order_level[j] for j in range(1, n_K+1) for k in range(1, n_K+1) if (j!=k) for i in range(n_C)))
+    P1.addConstrs((x[i][j][k]*car_level[i] <= u[k] + order_level[k] for k in range(1, n_K+1) for j in range(1, n_K+1) if (k!=j) for i in range(n_C)))
     
+    # moving time for car i to process its first order
+    P1.addConstrs((s[i][0][j] == station_distance[car_initial_station[i]][order_initial_station[j]] for j in range(1, n_K+1) for i in range(n_C)))
+    
+    # moving time for car i to process order k after order j
+    P1.addConstrs((s[i][j][k] == station_distance[order_final_station[j]][order_initial_station[k]] for j in range(1, n_K+1) for k in range(1, n_K+1) if (j!=k) for i in range(n_C)))
+    
+    # (time) proper schedule
+    P1.addConstrs((x[i][j][k] * (order_end_time[j]+3+s[i][j][k]+0.5) <= order_begin_time[k] for j in range(n_K+1) for k in range(1, n_K+1) if (j!=k) for i in range(n_C)))
     
     ##### Optimization #####
     P1.optimize()
-    print("z* = ", P1.ObjVal)
+    
 
+    
