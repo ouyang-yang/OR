@@ -69,7 +69,7 @@ def ReadInstance(filepath):
 if __name__=='__main__':
     
     ##### Get instance #####
-    filepath = 'data/instance04.txt'
+    filepath = 'data/instance05.txt'
     Instance = ReadInstance(filepath)
     
     
@@ -204,10 +204,10 @@ if __name__=='__main__':
     P1.addConstrs(quicksum(x[i][j][k] for k in range(n_K+1) if (k!=j)) == quicksum(x[i][h][j] for h in range(n_K+1) if (h!=j)) for i in range(n_C) for j in range(1, n_K+1))
     P1.addConstrs(1-x[i][j][k] >= x[i][k][j] for i in range(n_C) for j in range(1, n_K+1) for k in range(1, n_K+1))
     ###
-    P1.addConstrs(2-x[i][0][j]-x[i][j][0] >= quicksum(x[i][j][k] for k in range(1, n_K+1))+quicksum(x[i][h][j] for h in range(1, n_K+1)) for i in range(n_C) for j in range(i, n_K+1))
+    P1.addConstrs(2-x[i][0][j]-x[i][j][0] >= quicksum(x[i][j][k] for k in range(1, n_K+1))+quicksum(x[i][h][j] for h in range(1, n_K+1)) for i in range(n_C) for j in range(1, n_K+1))
     ###
-    P1.addConstrs(quicksum(quicksum(x[i][j][k] for i in range(n_C)) for j in range(n_K) if (j!=k)) == accept[k] for k in range(1, n_K+1))
-    P1.addConstrs(quicksum(quicksum(x[i][j][k] for i in range(n_C)) for k in range(n_K) if (k!=j)) == accept[j] for j in range(1, n_K+1))
+    P1.addConstrs(quicksum(quicksum(x[i][j][k] for i in range(n_C)) for j in range(n_K+1) if (j!=k)) == accept[k] for k in range(1, n_K+1))
+    P1.addConstrs(quicksum(quicksum(x[i][j][k] for i in range(n_C)) for k in range(n_K+1) if (k!=j)) == accept[j] for j in range(1, n_K+1))
     
     P1.addConstrs(accept[j]*(u[j]*(order_level[j]+1)+(1-u[j])*order_level[j]) == quicksum(car_level[i]*x[i][j][k] for i in range(n_C) for k in range(n_K+1) if (k!=j)) for j in range(1, n_K+1))
     P1.addConstrs(accept[k]*(u[k]*(order_level[k]+1)+(1-u[k])*order_level[k]) == quicksum(car_level[i]*x[i][j][k] for i in range(n_C) for j in range(n_K+1) if (j!=k)) for k in range(1, n_K+1))
