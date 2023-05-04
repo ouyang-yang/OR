@@ -127,7 +127,7 @@ if __name__=='__main__':
         order_begin_time.append(int(begin_time))
         order_end_time.append(int(end_time))  
     
-    # Station distance
+    # Station distance [i][j] = moving time needed from station i to j
     station_distance = []
     for i in range(n_S+1):
         station_distance.append([])
@@ -137,13 +137,13 @@ if __name__=='__main__':
             else:
                 station_distance[i].append(float(Instance['Station_Distance'][(i-1)*n_S+(j-1)][2]))
     
-    # Revenue
+    # Revenue [k] = revenue of order k 
     revenue = []
     for i in range(n_K+1):
         rent_time = (order_end_time[i] - order_begin_time[i])/2
         revenue.append(level_rate[order_level[i]] * rent_time)
     
-    # Moving time
+    # Moving time [i][j][k] = moving time needed for car i to serve for order k after served order j
     moving_time = []
     for i in range(n_C):
         moving_time.append([])
@@ -154,18 +154,20 @@ if __name__=='__main__':
                     if (j == k or k == 0):
                         moving_time[i][j].append(int(0))
                     else:
-                        # no moving time for first order
+                        # NO moving time needed for the first order as car i is at the correct station required by the first order
                         if (station_distance[car_initial_station[i]][order_initial_station[k]] == 0):
                             moving_time[i][j].append(int(0))
-                        # moving time needed for first order, 30min ready time added
+                        # moving time needed for the first order, 30min ready time added
                         else:
                             moving_time[i][j].append(int((station_distance[car_initial_station[i]][order_initial_station[k]]+30) / 30))  
             else:
                 for k in range(n_K+1):
+                    # can NOT accept same order twice and NO moving time needed after the last order 
                     if (j == k or k == 0):
                         moving_time[i][j].append(int(0))
                     else:
                         moving_time[i][j].append(int(station_distance[order_final_station[j]][order_initial_station[k]] / 30)) 
+    
     
     
     ##### Variables #####
@@ -173,6 +175,11 @@ if __name__=='__main__':
     accept = []
     for i in range(n_K+1):
         accept.append(P1.addVar(lb=0, vtype=GRB.BINARY, name='accept_'+str(i+1)))
+        
+    # u_k: binary, 1 if order k is upgraded
+    u = []
+    for i in range(n_K+1):
+        u.append(P1.addVar(lb=0, vtype=GRB.BINARY, name='u_'+str(i+1)))    
         
     # x_ijk: binary, 1 if order k is processed directly after order j on car i
     x = []
@@ -183,10 +190,7 @@ if __name__=='__main__':
             for k in range(n_K+1):
                 x[i][j].append(P1.addVar(lb=0, vtype=GRB.BINARY, name='x_'+str(i+1)+str(j)+str(k)))
                 
-    # u_k: binary, if order k is upgraded
-    u = []
-    for i in range(n_K+1):
-        u.append(P1.addVar(lb=0, vtype=GRB.BINARY, name='u_'+str(i+1)))
+ 
     
     ##### Objective #####    
     P1.setObjective(
@@ -196,28 +200,54 @@ if __name__=='__main__':
     
     
     ##### Constraints #####
+    # order 0 is always accepted (all cars start with order 0 and end with order 0)
     P1.addConstr(accept[0] == 1)
+    
+    # (may be taken away) we can NOT accept same order twice or more
     P1.addConstrs(x[i][j][j] == 0 for i in range(n_C) for j in range(n_K+1))
     
-    P1.addConstrs(quicksum(x[i][0][j] for j in range(1, n_K+1)) <= 1 for i in range(n_C))
-    P1.addConstrs(quicksum(x[i][0][j] for j in range(1, n_K+1)) == quicksum(x[i][k][0] for k in range(1, n_K+1)) for i in range(n_C))
+    # car i has to select exactly one order k to start serving, or NEVER serves for any order
+    P1.addConstrs(quicksum(x[i][0][k] for k in range(1, n_K+1)) <= 1 for i in range(n_C))
+    
+    # (may be taken away) if car i starts to serve, it has to end serving
+    P1.addConstrs(quicksum(x[i][0][k] for k in range(1, n_K+1)) == quicksum(x[i][j][0] for j in range(1, n_K+1)) for i in range(n_C))
+    
+    # for an order j served by car i, it has a predecessor order h and a successor order k on the same car 
     P1.addConstrs(quicksum(x[i][j][k] for k in range(n_K+1) if (k!=j)) == quicksum(x[i][h][j] for h in range(n_K+1) if (h!=j)) for i in range(n_C) for j in range(1, n_K+1))
+    
+    # (may be taken away) we can NOT serve for order k after order j and serve for order j after order k at the same time
     P1.addConstrs(1-x[i][j][k] >= x[i][k][j] for i in range(n_C) for j in range(1, n_K+1) for k in range(1, n_K+1))
-    ###
+    
+    # (may be taken away) if order j served by car i is either the first order, the last order or both, it can only have order 0 as its predecessor, successor, or both, respectively 
     P1.addConstrs(2-x[i][0][j]-x[i][j][0] >= quicksum(x[i][j][k] for k in range(1, n_K+1))+quicksum(x[i][h][j] for h in range(1, n_K+1)) for i in range(n_C) for j in range(1, n_K+1))
-    ###
+    
+    # if order k is accepted, exactly one car i serves for it
     P1.addConstrs(quicksum(quicksum(x[i][j][k] for i in range(n_C)) for j in range(n_K+1) if (j!=k)) == accept[k] for k in range(1, n_K+1))
+    
+    # if order j is accepted, exactly one car i serves for it
     P1.addConstrs(quicksum(quicksum(x[i][j][k] for i in range(n_C)) for k in range(n_K+1) if (k!=j)) == accept[j] for j in range(1, n_K+1))
     
+    # if order j can be accepted after upgraded, upgrade it
     P1.addConstrs(accept[j]*(u[j]*(order_level[j]+1)+(1-u[j])*order_level[j]) == quicksum(car_level[i]*x[i][j][k] for i in range(n_C) for k in range(n_K+1) if (k!=j)) for j in range(1, n_K+1))
+    
+    # if order k can be accepted after upgraded, upgrade it
     P1.addConstrs(accept[k]*(u[k]*(order_level[k]+1)+(1-u[k])*order_level[k]) == quicksum(car_level[i]*x[i][j][k] for i in range(n_C) for j in range(n_K+1) if (j!=k)) for k in range(1, n_K+1))
     
+    # moving time needed for car i to serve its first order(ready time already included) <= the begin time required
     P1.addConstrs(x[i][0][j]*moving_time[i][0][j] <= order_begin_time[j] for i in range(n_C) for j in range(1, n_K+1))
-    P1.addConstrs(order_begin_time[k] + n_D*96*(1-x[i][j][k]) >= order_end_time[j] + 2 + 6 + moving_time[i][j][k] + 1 for i in range(n_C) for j in range(1, n_K+1) for k in range(1, n_K+1) if (j!=k))
+    
+    # the begin time of order k >= the end time of order j + total setup time for car i to serve order k after order j
+    P1.addConstrs(order_begin_time[k] + n_D*100000*(1-x[i][j][k]) >= order_end_time[j] + 2 + 6 + moving_time[i][j][k] + 1 for i in range(n_C) for j in range(1, n_K+1) for k in range(1, n_K+1) if (j!=k))
+    
+    # total moving time of all cars <= B
     P1.addConstr(quicksum(x[i][j][k]*moving_time[i][j][k] for i in range(n_C) for j in range(n_K+1) for k in range(1, n_K+1)) <= B)
+    
+    
     
     ##### Optimization #####
     P1.optimize()
+    
+    print("Obj. value = ", P1.objVal)
     
     ac_results = []
     for i in range(n_K+1):
