@@ -6,20 +6,21 @@ from gurobipy import *
 
 if __name__ == '__main__':
     
-    
-    
     ##### Model #####
+    
     model = Model('model')
+    
+    
     
     
     
     ##### Parameters #####
     
     ''' Adjust size of the parking lot '''
-    B = 120.0
-    L = 120.0
-    w = 7.0
-    l = L - 2*w
+    B = 120.0       # Width of the parking lot
+    L = 120.0       # Length of the parking lot (Length of exterior rows)
+    w = 7.0         # Width of the road at top and bottom
+    l = L - 2*w     # Length of interior rows
     '''--------------------------------'''
     
     ''' Adjust angles of a parking spot row '''   
@@ -36,7 +37,11 @@ if __name__ == '__main__':
     '''------------------------------------------'''
     
     
+    
+    
+    
     ##### Variables #####
+    
     # angle set = [90, 75, 60, 45, 30]
     X = []
     Xe = []
@@ -54,28 +59,47 @@ if __name__ == '__main__':
         
         
         
+        
+        
     ##### Objective #####
+    
+    # Maximize the total number of parking spots
     model.setObjective(
         quicksum(n[i] + ne[i] + nEE[i] for i in range(num_of_angles)),
         GRB.MAXIMIZE)
     
     
     
+    
+    
     ##### Constraints #####
+    
+    # Total width of full interior rows, full exterior rows, and exterior rows should be less than the width of  the parking lot
     model.addConstr(quicksum(F3[i]*X[i] + F1[i]*Xe[i] + (C1[i]+D[i])*E[i] for i in range(num_of_angles)) <= B)
+    
+    # The number of spots in each rows should be less than its upper bound
+    # Upper bound = (max length of row / width of a spot) * number of rows
     model.addConstrs(l//A2[i]*2*X[i] >= n[i] for i in range(num_of_angles))
     model.addConstrs(l//A2[i]*Xe[i] + L//A2[i]*Xe[i] >= ne[i] for i in range(num_of_angles))
     model.addConstrs(L//A2[i]*E[i] >= nEE[i] for i in range(num_of_angles))
+    
+    # There should be exactly two exterior rows
     model.addConstr(quicksum(Xe[i] + E[i] for i in range(num_of_angles)) == 2)
     
     
     
+    
+    
     ##### Optimization #####
+    
     model.optimize()
     
     
     
+    
+    
     ##### Results #####
+    
     results = open('LP_results.csv', 'w')
     
     results.write(f'B, {B}')
@@ -114,7 +138,7 @@ if __name__ == '__main__':
     
     results.close()
     
-    
+    '''
     X_results = []
     Xe_results = []
     E_results = []
@@ -128,7 +152,7 @@ if __name__ == '__main__':
         n_results.append(n[i].x)
         ne_results.append(ne[i].x)
         nEE_results.append(nEE[i].x)
-    
+    '''
    
     
     
