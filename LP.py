@@ -31,7 +31,8 @@ if __name__ == '__main__':
     ''' Change parameters here if angles changed '''
     A2 = [2.5, 2.7, 2.8, 3.5, 5.6]
     C1 = [5.0, 5.5, 5.6, 5.3, 4.5]
-    D  = [7.0, 6.0, 4.5, 3.75, 3.5]
+    C3 = [5.0, 5.15, 5.05, 4.40, 3.40]
+    D1  = [7.0, 6.0, 4.5, 3.75, 3.5]
     F1 = [18.0, 17.75, 15.65, 13.45, 11.4]
     F3 = [18.0, 17.4, 14.8, 12.55, 10.3]
     '''------------------------------------------'''
@@ -75,7 +76,7 @@ if __name__ == '__main__':
     ##### Constraints #####
     
     # Total width of full interior rows, full exterior rows, and exterior rows should be less than the width of  the parking lot
-    model.addConstr(quicksum(F3[i]*X[i] + F1[i]*Xe[i] + (C1[i]+D[i])*E[i] for i in range(num_of_angles)) <= B)
+    model.addConstr(quicksum((2*C3[i]+D1[i])*X[i] + (C1[i]+D1[i]+C3[i])*Xe[i] + (C1[i]+D1[i])*E[i] for i in range(num_of_angles)) <= B)
     
     # The number of spots in each rows should be less than its upper bound
     # Upper bound = (max length of row / width of a spot) * number of rows
